@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Proof Bridge: Turn One Assignment Into Proof</title>
+<meta name="description" content="Turn one piece of coursework into proof a stranger can check. Free tool by Pascal Leong.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#020817; --s1:#0A1325; --s2:#0F1A30; --input:rgba(241,245,249,0.04);
+    --line:#1B2942; --line2:#2C3E5C;
+    --fg:#F1F5F9; --muted:#8A9BB5; --subtle:#5B6B85;
+    --acc:#2DD4BF; --acc-h:#14B8A6; --acc-p:#0D9488; --acc-ink:#020817;
+    --link:#5EEAD4; --ring:0 0 0 2px rgba(94,234,212,0.55);
+    --glow:0 0 0 1px #5EEAD4, 0 0 24px rgba(45,212,191,0.35);
+    --r:6px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font:16px/1.6 Inter,system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(rgba(94,234,212,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(94,234,212,0.035) 1px, transparent 1px);
+    background-size:44px 44px;
+  }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(620px 320px at 50% -80px, rgba(45,212,191,0.09), transparent 70%);}
+  main{max-width:680px;margin:0 auto;padding:26px 16px 56px;position:relative}
+
+  .mono,.eyebrow,.step-tag,.tag,.sl,.axis,.seg-label{font-family:"JetBrains Mono",ui-monospace,monospace}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:clamp(30px,8vw,44px);line-height:1.06;letter-spacing:-.03em;margin:12px 0 12px;font-weight:800}
+  h1 span{color:var(--acc)}
+  h2{font-size:20px;margin:0 0 6px;letter-spacing:-.01em;font-weight:700}
+  .lede{color:var(--muted);margin:0 0 20px;max-width:56ch;font-size:15.5px}
+  .small{font-size:13.5px;color:var(--muted);margin:8px 0}
+  .fine{color:var(--subtle);font-size:12.5px;text-align:center;margin:16px 0 0}
+  a{color:var(--link)}
+  b{color:var(--fg)}
+
+  /* surfaces */
+  .card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:20px 18px;margin:0 0 14px}
+  .step-tag{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:0 0 6px}
+
+  /* stepper */
+  .stepper{margin:6px 0 16px}
+  .stepper-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:10px}
+  .stepper-top .mono{font-size:10.5px;font-weight:600;letter-spacing:.14em;color:var(--subtle);text-transform:uppercase}
+  .stepper-top .seg-label{font-size:10.5px;font-weight:600;letter-spacing:.12em;color:var(--fg);text-transform:uppercase;text-align:right}
+  .bars{display:flex;gap:6px}
+  .seg{flex:1;height:4px;padding:0;border:0;border-radius:2px;background:var(--line);cursor:pointer}
+  .seg.done{background:var(--acc)}
+  .seg.cur{background:var(--acc);box-shadow:0 0 12px rgba(45,212,191,0.5)}
+  .seg:disabled{cursor:default}
+
+  /* panels */
+  .panel{display:none}
+  .panel.on{display:block;animation:rise .32s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* inputs */
+  label.f{display:block;margin:16px 0 6px;font-size:14px;color:var(--muted);font-weight:500}
+  label.f .opt{color:var(--subtle);font-weight:400}
+  input[type=text],textarea{
+    width:100%;background:var(--input);color:var(--fg);border:1px solid var(--line);
+    border-radius:var(--r);padding:11px 12px;font:inherit;color-scheme:dark;
+  }
+  textarea{min-height:112px;resize:vertical}
+  ::placeholder{color:var(--subtle)}
+  input:focus,textarea:focus{outline:none;border-color:var(--link);box-shadow:var(--ring)}
+  .row3{display:grid;grid-template-columns:72px 1fr 1fr;gap:10px}
+  @media (max-width:480px){.row3{grid-template-columns:1fr 1fr}.row3>div:first-child{grid-column:1/-1}}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1px solid var(--line2);background:var(--input);color:var(--fg);border-radius:var(--r);
+    padding:10px 14px;min-height:42px;font:500 14px/1.2 Inter,system-ui,sans-serif;cursor:pointer;
+    transition:border-color .15s,background .15s;
+  }
+  .chip:hover{border-color:var(--link)}
+  .chip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700;box-shadow:var(--glow)}
+
+  /* buttons */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:46px;padding:12px 18px;border-radius:var(--r);border:1px solid var(--acc);
+    background:var(--acc);color:var(--acc-ink);font:700 15px/1 Inter,system-ui,sans-serif;
+    cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s;
+  }
+  .btn:hover{background:var(--acc-h);border-color:var(--acc-h)}
+  .btn:active{background:var(--acc-p);border-color:var(--acc-p)}
+  .btn.ghost{background:transparent;color:var(--link);border-color:var(--line2)}
+  .btn.ghost:hover{border-color:var(--link);background:rgba(45,212,191,0.10)}
+  .btn.sm{min-height:38px;padding:8px 14px;font-size:14px}
+  .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+  .btn:focus-visible,.chip:focus-visible,.tab:focus-visible,.seg:focus-visible{outline:none;box-shadow:var(--ring)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 4px}
+  .nav{display:flex;align-items:center;gap:12px;margin-top:16px}
+  .nav .hint{flex:1;color:var(--subtle);font-size:13px;text-align:right}
+
+  /* step 3 */
+  .q{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+  #checks .q:first-child{border-top:0;padding-top:4px}
+  .q>span{font-size:15px}
+  .yn{display:flex;gap:6px;flex-shrink:0}
+  .yn .chip{min-width:58px;min-height:38px;padding:8px 10px}
+  .matrix{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
+  .mcell{
+    border:1px dashed var(--line2);border-radius:var(--r);padding:12px 10px;min-height:66px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:13px;color:var(--subtle);transition:border-color .2s,color .2s;
+  }
+  .mcell.on{border:1px solid var(--acc);color:var(--fg);font-weight:700;background:rgba(45,212,191,0.08);box-shadow:var(--glow)}
+  .axis{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);text-align:center}
+  .banner{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--s2)}
+  .banner.is-proof{box-shadow:var(--glow)}
+  .banner .name{font-size:19px;font-weight:800;margin:2px 0 4px}
+  .banner .move{margin:0;color:var(--muted);font-size:14px}
+  .nextmove{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-right:6px}
+
+  /* step 4 ladder */
+  .trail{margin:4px 0 6px}
+  .trail-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--subtle)}
+  .trail-row:first-child{border-top:0}
+  .trail-row .ans{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;flex-shrink:0}
+  .trail-row.no .ans{color:var(--subtle)}
+  .trail-row.yes .ans{color:var(--acc)}
+  .ladder-q{padding:14px 0 4px}
+  .ladder-q h3{font-size:19px;margin:4px 0 14px;font-weight:700}
+  .yn-big{display:flex;gap:10px;flex-wrap:wrap}
+  .yn-big .chip{min-width:110px;min-height:46px;font-size:15px}
+  .sentence{
+    display:flex;flex-wrap:wrap;align-items:center;row-gap:10px;font-size:17px;line-height:1.9;font-weight:500;
+    background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:10px 0;box-shadow:var(--glow);
+  }
+  .bl{display:inline-flex;align-items:center;color:var(--subtle);margin:0 1px}
+  .bl::before{content:"[";}
+  .bl::after{content:"]";}
+  .bl input{
+    background:var(--input);border:1px dashed var(--line2);border-radius:4px;padding:3px 6px;margin:0 2px;
+    color:var(--fg);font:inherit;font-size:15.5px;width:8ch;min-width:4ch;max-width:100%;
+  }
+  .bl input:focus{outline:none;border-color:var(--link);box-shadow:var(--ring)}
+  .gap{color:var(--subtle);background:var(--input);border-radius:3px;padding:0 3px}
+  .est{color:var(--link)}
+  .linkish{background:none;border:0;padding:0;color:var(--link);font:500 13px Inter,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+  /* step 5 */
+  .st-chip{display:inline-block;font:700 12px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--acc-ink);background:var(--acc);border-radius:var(--r);padding:6px 10px;margin-bottom:8px}
+  .move2{color:var(--muted);font-size:14.5px;margin:6px 0 0}
+  .big-sentence{font-size:17px;font-weight:600;line-height:1.8;margin:8px 0 4px;
+    background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+  .tab{border:1px solid var(--line2);background:var(--input);color:var(--fg);border-radius:var(--r);
+    padding:8px 12px;min-height:36px;font:500 13px Inter,sans-serif;cursor:pointer;transition:border-color .15s}
+  .tab:hover{border-color:var(--link)}
+  .tab.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700}
+  .star p{margin:10px 0;font-size:14.5px}
+  .sl{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);
+    display:inline-block;min-width:82px;margin-right:6px}
+  .contact{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:12px 0;background:var(--s2)}
+  .msg{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--input);border:1px solid var(--line);
+    border-radius:var(--r);padding:12px;font-size:14px;line-height:1.65;margin:8px 0}
+  pre#aiPrompt{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--input);border:1px solid var(--line);
+    border-radius:var(--r);padding:14px;font:12.5px/1.6 "JetBrains Mono",monospace;max-height:280px;overflow:auto;margin:10px 0}
+  .reply{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--s2);border:1px solid var(--line);
+    border-left:3px solid var(--acc);border-radius:var(--r);padding:14px;font-size:14.5px;line-height:1.65;margin:10px 0}
+
+  footer{margin-top:28px;padding-top:4px}
+  footer .btns{flex-direction:column;gap:10px;margin:20px 0 8px}
+  footer .btn{width:100%}
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);
+    background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:14px;
+    padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <div class="eyebrow">Proof Bridge · Free tool</div>
+    <h1>Turn one assignment into <span>proof</span></h1>
+    <p class="lede">Answer a few quick questions about one piece of coursework. Leave with where it stands, a result sentence, an interview answer, messages to the right people, and a proof card to keep. About 3 minutes. Nothing is saved or sent.</p>
+    <div class="small" style="margin-bottom:8px">No coursework in mind? Load a made-up example:</div>
+    <div class="chips" id="exChips"></div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Progress"></nav>
+
+  <div id="panels">
+
+    <!-- STEP 1 -->
+    <section class="panel" data-step="1">
+      <div class="card">
+        <div class="step-tag">Step 1 · Your goal</div>
+        <h2>What do you want next?</h2>
+        <div class="chips" id="goalChips" style="margin-top:12px"></div>
+        <p class="small" id="unsureNote" hidden>No pressure, we'll line this up like a first internship.</p>
+        <label class="f" for="role">What role do you want?</label>
+        <input type="text" id="role" data-field="role" placeholder="e.g. data analyst" autocomplete="off">
+        <label class="f" for="company">Target company <span class="opt">(optional)</span></label>
+        <input type="text" id="company" data-field="company" placeholder="e.g. a bank, Grab, a fintech startup" autocomplete="off">
+      </div>
+      <div class="nav">
+        <button type="button" class="btn ghost sm" data-back hidden>Back</button>
+        <span class="hint" data-hint></span>
+        <button type="button" class="btn" data-next>Next Step</button>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="panel" data-step="2">
+      <div class="card">
+        <div class="step-tag">Step 2 · The work</div>
+        <h2>You and your work</h2>
+        <div class="row3">
+          <div><label class="f" for="year">Year</label>
+            <input type="text" id="year" data-field="year" inputmode="numeric" placeholder="2" autocomplete="off"></div>
+          <div><label class="f" for="course">Course</label>
+            <input type="text" id="course" data-field="course" placeholder="e.g. Business Analytics" autocomplete="off"></div>
+          <div><label class="f" for="university">University</label>
+            <input type="text" id="university" data-field="university" placeholder="e.g. Universiti Malaya" autocomplete="off"></div>
+        </div>
+        <label class="f" for="title">Title of the work</label>
+        <input type="text" id="title" data-field="title" placeholder='e.g. "Why customers leave a bank app"' autocomplete="off">
+        <label class="f" for="unit">Unit or course</label>
+        <input type="text" id="unit" data-field="unit" placeholder="e.g. Business Analytics" autocomplete="off">
+        <label class="f" for="notes">What did you do? A few lines, with any numbers.</label>
+        <textarea id="notes" data-field="notes" placeholder="e.g. Used a public dataset of 10,000 bank customers. Cleaned it in Python and ran a churn model. Found customers under 25 leave twice as often. Wrote 3 fixes."></textarea>
+        <label class="f" for="grade">Grade, if you got one <span class="opt">(optional)</span></label>
+        <input type="text" id="grade" data-field="grade" placeholder="e.g. 84/100, A-" autocomplete="off">
+        <p class="small">Only your own work. Nothing on this page is saved or sent anywhere.</p>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn ghost sm" data-back>Back</button>
+        <span class="hint" data-hint></span>
+        <button type="button" class="btn" data-next>Next Step</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="panel" data-step="3">
+      <div class="card">
+        <div class="step-tag">Step 3 · Where it stands</div>
+        <h2>Two quick checks</h2>
+        <div id="checks"></div>
+        <div class="matrix">
+          <div class="mcell" data-k="seen">Seen, but nothing to check</div>
+          <div class="mcell" data-k="proof">Proof</div>
+          <div class="mcell" data-k="none">No proof yet</div>
+          <div class="mcell" data-k="ready">Ready, but unseen</div>
+        </div>
+        <div class="axis">↑ seen by someone outside your class &nbsp;·&nbsp; → openable by anyone</div>
+        <div id="statusBanner"></div>
+        <p class="small">Proof counts when someone outside your class can open it and check it themselves. A grade alone does not clear the bar.</p>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn ghost sm" data-back>Back</button>
+        <span class="hint" data-hint></span>
+        <button type="button" class="btn" data-next>Next Step</button>
+      </div>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="panel" data-step="4">
+      <div class="card">
+        <div class="step-tag">Step 4 · The result</div>
+        <h2>What kind of result is it?</h2>
+        <p class="small">Answer from the top. The first Yes decides.</p>
+        <div id="ladder"></div>
+        <div id="resultBox"></div>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn ghost sm" data-back>Back</button>
+        <span class="hint" data-hint></span>
+        <button type="button" class="btn" data-next>See My Proof Card</button>
+      </div>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="panel" data-step="5">
+      <div class="card">
+        <div class="step-tag">Step 5 · Your proof card</div>
+        <h2>Where it stands</h2>
+        <div id="st5Status"></div>
+      </div>
+      <div class="card">
+        <h2>Your result sentence</h2>
+        <div id="st5Result"></div>
+      </div>
+      <div class="card">
+        <h2>Your interview answer</h2>
+        <p class="small">STAR keeps answers sharp: <b>S</b>ituation, <b>T</b>ask, <b>A</b>ction, <b>R</b>esult: where you were, what you had to do, what you did, what it achieved.</p>
+        <div class="tabs" id="starTabs"></div>
+        <div class="star" id="starOut"></div>
+        <div class="btns"><button type="button" class="btn sm" id="copyStar">Copy Answer</button></div>
+      </div>
+      <div class="card">
+        <h2>Who to contact</h2>
+        <p class="small">Copy a message, fill in the [brackets], then send it yourself. Nothing is ever sent from this page.</p>
+        <div id="contacts"></div>
+      </div>
+      <div class="card">
+        <h2>Write it for me</h2>
+        <p class="small">Builds one prompt from all your answers: only your facts, gaps marked as [add: …]. An AI can polish the wording; you stay in control of the facts.</p>
+        <div class="btns">
+          <button type="button" class="btn" id="writeBtn">Write It For Me</button>
+          <button type="button" class="btn ghost" id="copyPromptBtn" hidden>Copy Prompt</button>
+          <a class="btn ghost" id="openAi" href="https://ilmuchat.ai" target="_blank" rel="noopener" hidden>Open ILMUchat</a>
+        </div>
+        <div class="small" id="aiStatus" hidden></div>
+        <pre id="aiPrompt" hidden></pre>
+        <div class="reply" id="aiReply" hidden></div>
+      </div>
+      <div class="card">
+        <h2>Keep it</h2>
+        <div class="btns">
+          <button type="button" class="btn" id="dl">Download Proof Card</button>
+          <button type="button" class="btn ghost" id="restart">Start Another Assignment</button>
+        </div>
+        <p class="small">Keep every card in one folder. That folder is what you read the night before interviews.</p>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn ghost sm" data-back>Back</button>
+        <span class="hint" data-hint></span>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="btns">
+      <a class="btn" href="https://pascalleonghx.short.gy/apply-sub" target="_blank" rel="noopener">Build your proof with Pascal: founding 28-Day Career Moat Sprint</a>
+      <a class="btn ghost" href="https://pascalleonghx.short.gy/un-newsletter" target="_blank" rel="noopener">Get the playbook every Tuesday</a>
+    </div>
+    <p class="fine">Built by Pascal Leong at AI Smart Nation 2026, Kuala Lumpur. Examples are made up.</p>
+  </footer>
+
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+  });
+}
+function hl(s){ return s.replace(/\[([^\]]+)\]/g, '<span class="gap">[$1]</span>'); }
+function li(q){ return "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(q); }
+
+/* ---------- data ---------- */
+
+var GOALS = [
+  ["big", "A job at a big company"],
+  ["start", "A startup or my own company"],
+  ["intern", "My first internship"],
+  ["research", "Research or a Master's"],
+  ["unsure", "Not sure yet"]
+];
+
+var CHECK_QS = [
+  ["open", "Can someone outside your class open it today?"],
+  ["seen", "Has anyone outside your class seen it?"]
+];
+
+var ORDER = ["outcome","build","analysis","case"];
+var TYPES = {
+  outcome: { name:"Real outcome", q:"Did real people or a real organisation use it?",
+    segs:[{t:"Helped "},{b:"who"},{t:" go from "},{b:"before"},{t:" to "},{b:"after"},{t:" in "},{b:"time"},{t:"."}],
+    tip:"Ask the person you helped for a one-line quote you can show." },
+  build: { name:"Working build", q:"Did you build something that works?",
+    segs:[{t:"Built "},{b:"what"},{t:" that "},{b:"does what"},{t:", used by "},{b:"how many"},{t:" people."}],
+    tip:"Get 3 real people to use it and note what changed for them." },
+  analysis: { name:"Real analysis", q:"Did you use real data or real sources?",
+    segs:[{t:"Analysed "},{b:"how much data"},{t:" and found "},{b:"finding"},{t:" that matters to "},{b:"who"},{t:"."}],
+    tip:"Turn it into a tool or template someone else can use." },
+  case: { name:"Class case", q:"Was it a case where you recommended a decision?",
+    segs:[{t:"For "},{b:"company in the case"},{t:", I recommended "},{b:"decision"},{t:". My estimate: "},{b:"result"},{t:" within "},{b:"time"},{t:", assuming "},{b:"key assumption"},{t:"."}],
+    est:true, tip:"Redo it with real data or real sources." },
+  skill: { name:"Skill proof",
+    segs:[{t:"Scored "},{b:"grade"},{t:", top "},{b:"x"},{t:"% of "},{b:"class size"},{t:". I can now "},{b:"skill"},{t:"."}],
+    tip:"Use it on a real case and recommend one decision." }
+};
+
+var STAR_LABELS = { short:"30 Seconds", mid:"1 Minute", long:"2 Minutes" };
+var STAR_WORDS = { short:"75", mid:"150", long:"300" };
+
+var EXAMPLES = [
+  { name:"Bank Churn Analysis",
+    goal:"big", role:"Data analyst", company:"a Malaysian bank",
+    year:"2", course:"Business Analytics", university:"Universiti Malaya",
+    title:"Why customers leave a bank app", unit:"Business Analytics", grade:"84/100",
+    notes:"Used a public dataset of 10,000 bank customers.\nCleaned the data in Python and ran a churn model.\nFound that customers under 25 without a debit card leave about twice as often.\nWrote 3 fixes the bank could test.\nThe full report is on my GitHub.",
+    open:"yes", seen:"no", ladderNo:2, type:"analysis", star:"mid",
+    blanks:{ "how much data":"a public dataset of 10,000 bank customers",
+      "finding":"customers under 25 without a card leave about twice as often",
+      "who":"the bank's retention team" } },
+  { name:"Sundry Shop Stock Tracker",
+    goal:"intern", role:"Operations intern", company:"",
+    year:"2", course:"Business Administration", university:"Politeknik Ungku Omar",
+    title:"Stock tracker for a sundry shop", unit:"Operations Management", grade:"",
+    notes:"Built a Google Sheet that flags items running low.\nMy uncle's shop in Ipoh used it for 6 weeks.\nBefore, he ran out of rice and cooking oil most weeks.\nWith the sheet, he ran out once in 6 weeks.\nHe still opens it every morning.",
+    open:"yes", seen:"yes", ladderNo:0, type:"outcome", star:"short",
+    blanks:{ "who":"my uncle's sundry shop in Ipoh",
+      "before":"running out of rice and cooking oil most weeks",
+      "after":"running out once in 6 weeks", "time":"6 weeks" } },
+  { name:"E-Wallet Case Study",
+    goal:"start", role:"Business analyst", company:"",
+    year:"3", course:"Finance", university:"Taylor's University",
+    title:"Should an e-wallet go after students?", unit:"Strategic Management", grade:"A-",
+    notes:"Class case on DuitKopi, a fictional e-wallet.\nCompared 3 options: campus deals, cashback, student loans.\nRecommended campus deals first.\nBuilt a simple payback model with my own assumptions.\nSent my write-up to a friend in the fintech society, who read it.",
+    open:"no", seen:"yes", ladderNo:3, type:"case", star:"long",
+    blanks:{ "company in the case":"DuitKopi (a fictional e-wallet)",
+      "decision":"campus deals before cashback", "result":"break-even",
+      "time":"8 months", "key assumption":"5% of students on campus adopt it" } }
+];
+
+/* ---------- state ---------- */
+
+var S = {
+  step:1, maxStep:1,
+  goal:"", role:"", company:"",
+  year:"", course:"", university:"",
+  title:"", unit:"", notes:"", grade:"",
+  open:"", seen:"",
+  ladderNo:0, type:"",
+  blanks:{ outcome:{}, build:{}, analysis:{}, case:{}, skill:{} },
+  star:"mid"
+};
+
+function blankState(){ return { outcome:{}, build:{}, analysis:{}, case:{}, skill:{} }; }
+function field(id){ return String(S[id] || "").trim(); }
+function fb(id, label){ var v = field(id); return v || "[add: " + label + "]"; }
+function ordinalYear(){
+  var n = parseInt(field("year").replace(/\D/g, ""), 10);
+  if (!n) return "";
+  var j = n % 10, k = n % 100;
+  if (j === 1 && k !== 11) return n + "st";
+  if (j === 2 && k !== 12) return n + "nd";
+  if (j === 3 && k !== 13) return n + "rd";
+  return n + "th";
+}
+function yearPhrase(){ var o = ordinalYear(); return o ? o + "-year " : ""; }
+
+/* ---------- core logic ---------- */
+
+function lane(){ return S.goal === "unsure" ? "intern" : S.goal; }
+function goalLabel(){
+  if (S.goal === "unsure") return "first internship (not sure yet)";
+  var m = {}; GOALS.forEach(function(g){ m[g[0]] = g[1]; });
+  return m[S.goal] || "[add: goal]";
+}
+
+function statusInfo(){
+  var o = S.open === "yes", n = S.seen === "yes";
+  if (!o && !n) return { key:"none", name:"No proof yet",
+    move:"Put it on one page anyone can open: a Google Doc, Notion page, GitHub repo or PDF." };
+  if (o && !n) return { key:"ready", name:"Ready, but unseen",
+    move:"Send it to 3 people from your contact list this week." };
+  if (!o && n) return { key:"seen", name:"Seen, but nothing to check",
+    move:"Put it on one page with the steps and the result." };
+  return { key:"proof", name:"Proof",
+    move:"Practise the interview answer out loud once." };
+}
+
+function typeText(type){
+  type = type || S.type || "skill";
+  return TYPES[type].segs.map(function(s){
+    return s.b ? (S.blanks[type][s.b] || "[" + s.b + "]") : s.t;
+  }).join("");
+}
+
+function clauseText(){
+  var t = S.type || "skill";
+  function b(l){ return S.blanks[t][l] || "[" + l + "]"; }
+  switch (t) {
+    case "outcome":  return "helped " + b("who") + " go from " + b("before") + " to " + b("after") + " in " + b("time");
+    case "build":    return "built " + b("what") + " that " + b("does what") + ", used by " + b("how many") + " people";
+    case "analysis": return "analysed " + b("how much data") + " and found " + b("finding") + " that matters to " + b("who");
+    case "case":     return "recommended " + b("decision") + " for " + b("company in the case") + ". My estimate: " + b("result") + " within " + b("time") + ", assuming " + b("key assumption") + " (an estimate from a class case)";
+    default:         return "scored " + b("grade") + ", top " + b("x") + "% of " + b("class size") + ", and can now " + b("skill");
+  }
+}
+
+function messages(){
+  var year = ordinalYear();
+  var course = fb("course","course"), uni = fb("university","university");
+  var unit = fb("unit","unit"), role = fb("role","role").toLowerCase();
+  var comp = field("company");
+  var at = comp ? " at " + comp : "";
+  var interns = lane() === "research" ? "research interns" : "interns";
+  var clause = clauseText();
+  return [
+    "Hi [Name], I'm a " + (year ? year + "-year " : "") + course + " student at " + uni + ". For my " + unit + " unit, I " + clause + ". I put it on one page here: [link]. I thought it might be useful for the " + role + " work your team does. If you have 2 minutes, what would make work like this more useful to your team? Thank you, [Your name]",
+    "Hi [Name], I'm [Your name], a " + course + " student at " + uni + " interested in " + role + " roles" + at + ". I recently " + clause + ", one-page summary here: [link]. Could I ask what your team looks for in " + interns + " for this role? Thank you for your time.",
+    "Hi [Name], I'm a " + course + " student at " + uni + " and saw you started as a " + role + " after graduating. I just finished a project where I " + clause + " ([link]). Would you be open to a 15-minute chat in the next few weeks about how you landed your first role? Thanks either way!"
+  ];
+}
+
+function contactGroups(){
+  var role = field("role"), comp = field("company");
+  function kw(){ return Array.prototype.slice.call(arguments).filter(Boolean).join(" "); }
+  if (lane() === "start") return [
+    { title:"Founders", hint:"They decide who joins a small team.", q:kw("founder", role, comp) },
+    { title:"Early employees", hint:"They know exactly what the team needs.", q:kw(role, comp, "early employee") },
+    { title:"Incubator managers", hint:"They meet students and startups every week.", q:kw("incubator manager", comp || role) }
+  ];
+  if (lane() === "research") return [
+    { title:"Professors", hint:"They pick research assistants and Master's students.", q:kw("professor", role) },
+    { title:"PhD students", hint:"They were you, two or three years ago.", q:kw("PhD student", role) },
+    { title:"Postdocs", hint:"They know what a research career really takes.", q:kw("postdoc", role) }
+  ];
+  return [
+    { title:"The hiring manager", hint:"The person who makes the final call.", q:kw("hiring manager", role, comp) },
+    { title:"Recruiters and team leads", hint:"They shape who gets interviewed.", q:kw("recruiter", role, comp) },
+    { title:"People who were in your shoes", hint:"Alumni and recent joiners from your course.", q:kw(role, comp || field("university")) }
+  ];
+}
+
+function add(x){ return "[add: " + x + "]"; }
+function wordCap(t, n){
+  if (!t) return add("2\u20133 lines on what you actually did");
+  var w = t.split(/\s+/);
+  return w.length <= n ? t : w.slice(0, n).join(" ") + "\u2026";
+}
+
+function starText(){
+  var uni = fb("university","your university"), course = fb("course","your course");
+  var year = ordinalYear(), unit = fb("unit","your unit"), title = fb("title","your title");
+  var res = typeText();
+  var notes = field("notes");
+  var head = year ? "I'm a " + year + "-year " + course + " student at " + uni + "."
+                  : "I'm a " + course + " student at " + uni + ".";
+  if (S.star === "short") return [
+    ["Situation", "In my " + unit + " unit at " + uni + ", I worked on \u201C" + title + "\u201D."],
+    ["Task", "I had to " + add("what you had to deliver") + "."],
+    ["Action", wordCap(notes, 40)],
+    ["Result", res]
+  ];
+  if (S.star === "mid") return [
+    ["Situation", head + " For my " + unit + " unit, I took on \u201C" + title + "\u201D."],
+    ["Task", "I had to " + add("what you had to deliver") + " " + add("any constraint, e.g. in 3 weeks, in a team of 4") + "."],
+    ["Action", wordCap(notes, 90)],
+    ["Result", res]
+  ];
+  return [
+    ["Situation", head + " In my " + unit + " unit, I took on \u201C" + title + "\u201D. " + add("one line on why this problem matters")],
+    ["Task", "I had to " + add("the deliverable") + ", working with " + add("constraints: time, team, tools") + "."],
+    ["Action", (notes || add("3\u20135 lines on what you did, step by step")) + " " + add("the hardest part and how you solved it")],
+    ["Result", res + " " + add("what you would do differently next time")]
+  ];
+}
+
+function buildPrompt(){
+  var st = statusInfo(), T = TYPES[S.type || "skill"];
+  return [
+    "You help a university student turn one piece of coursework into proof an employer, founder or professor can check.",
+    "Use only the student's facts below. Where a fact is missing, write [add: what is missing]. Never invent numbers, names, results, grades or quotes. Keep a friendly, professional tone, the way a polite student writes.",
+    "",
+    "Student: " + yearPhrase() + fb("course","course") + " at " + fb("university","university"),
+    "Goal: " + goalLabel(),
+    "Role they want: " + fb("role","role"),
+    "Target company: " + (field("company") || "not given"),
+    "Work: \u201C" + fb("title","title") + "\u201D for the " + fb("unit","unit") + " unit",
+    "What they did: " + (field("notes") || "[add: what they did]"),
+    "Where it stands: " + st.name + ". Next move: " + st.move,
+    "Result type: " + T.name + ". Result sentence: " + typeText(),
+    "Tip to make it stronger: " + T.tip,
+    "",
+    "Write, in plain English:",
+    "1. A one-page summary a stranger can check in 2 minutes: the problem, what they did, the result, where to see it. Fill the result sentence with the facts.",
+    "2. An interview answer in STAR order (Situation, Task, Action, Result), about " + STAR_WORDS[S.star] + " words.",
+    "3. Friendlier versions of these three messages, still in the student's voice:",
+  ].concat(messages().map(function(m){ return "- " + m; })).concat([
+    "",
+    "End with a short checklist of the facts still missing."
+  ]).join("\n");
+}
+
+function markdown(){
+  var st = statusInfo(), T = TYPES[S.type || "skill"];
+  var groups = contactGroups(), msgs = messages();
+  var star = starText().map(function(p){ return p[0] + ": " + p[1]; }).join("\n\n");
+  return [
+    "# Proof card: " + fb("title","title"),
+    "",
+    "- Student: " + yearPhrase() + fb("course","course") + " at " + fb("university","university"),
+    "- Goal: " + goalLabel(),
+    "- Role: " + fb("role","role"),
+    "- Target company: " + (field("company") || "not given"),
+    "- Unit: " + fb("unit","unit"),
+    "- Where it stands: **" + st.name + "**. " + st.move,
+    "",
+    "## Result (" + T.name + ")",
+    typeText(),
+    "",
+    "To make it stronger: " + T.tip,
+    "",
+    "## What I did",
+    field("notes") || "[add: what you did]",
+    "",
+    "## Interview answer (" + STAR_LABELS[S.star] + ")",
+    star,
+    "",
+    "## Who to contact"
+  ].concat(groups.map(function(g, i){
+    return "### " + g.title + "\nFind them: " + li(g.q) + "\n\n" + msgs[i] + "\n";
+  })).concat([
+    "Nothing sends automatically. Copy a message, fill in the [brackets], send it yourself.",
+    "",
+    "## Keep going",
+    "- [ ] One page anyone can open",
+    "- [ ] Sent to 3 people from the list",
+    "- [ ] Said the interview answer out loud once",
+    "",
+    "Keep every proof card in one folder. That folder is what you read before interviews.",
+    "",
+    "Made with Proof Bridge. Built by Pascal Leong at AI Smart Nation 2026, Kuala Lumpur. Examples are made up."
+  ]).join("\n");
+}
+
+/* ---------- rendering ---------- */
+
+var STEP_LABELS = ["Goal","The Work","Where It Stands","The Result","Proof Card"];
+
+function stepOk(n){
+  if (n === 1) return !!S.goal;
+  if (n === 2) return !!field("title");
+  if (n === 3) return S.open !== "" && S.seen !== "";
+  if (n === 4) return !!S.type;
+  return true;
+}
+var HINTS = {
+  1:"Pick a goal to continue", 2:"Give your work a title to continue",
+  3:"Answer both questions to continue", 4:"Answer the result questions to continue", 5:""
+};
+
+function fitBlank(inp){
+  var v = inp.value || inp.placeholder || "x";
+  inp.style.width = Math.min(60, Math.max(4, v.length + 1)) + "ch";
+}
+
+function renderStepper(){
+  var html = '<div class="stepper-top"><span class="mono">Step ' + S.step + ' of 5</span>' +
+    '<span class="seg-label">' + esc(STEP_LABELS[S.step-1]) + '</span></div><div class="bars">';
+  for (var i = 1; i <= 5; i++) {
+    var cls = i < S.step ? "done" : (i === S.step ? "cur" : "");
+    var dis = i > S.maxStep ? " disabled" : "";
+    html += '<button type="button" class="seg ' + cls + '" data-go="' + i + '"' + dis +
+      ' title="Step ' + i + ' \u00B7 ' + esc(STEP_LABELS[i-1]) + '" aria-label="Step ' + i + ', ' + esc(STEP_LABELS[i-1]) + '"></button>';
+  }
+  $("#stepper").innerHTML = html + "</div>";
+}
+
+function renderNav(){
+  $$(".panel").forEach(function(p){
+    var n = +p.dataset.step;
+    var next = p.querySelector("[data-next]");
+    var hint = p.querySelector("[data-hint]");
+    var back = p.querySelector("[data-back]");
+    if (next) next.disabled = !stepOk(n);
+    if (hint) hint.textContent = stepOk(n) ? "" : HINTS[n];
+    if (back) back.style.visibility = n === 1 ? "hidden" : "visible";
+  });
+}
+
+function renderChecks(){
+  $("#checks").innerHTML = CHECK_QS.map(function(q){
+    var yn = ["yes","no"].map(function(v){
+      return '<button type="button" class="chip' + (S[q[0]] === v ? " on" : "") + '" data-check="' + q[0] + '" data-val="' + v + '">' + (v === "yes" ? "Yes" : "No") + '</button>';
+    }).join("");
+    return '<div class="q"><span>' + esc(q[1]) + '</span><div class="yn">' + yn + "</div></div>";
+  }).join("");
+
+  var answered = S.open !== "" && S.seen !== "";
+  var st = statusInfo();
+  $$(".mcell").forEach(function(c){ c.classList.toggle("on", answered && c.dataset.k === st.key); });
+  $("#statusBanner").innerHTML = answered
+    ? '<div class="banner' + (st.key === "proof" ? " is-proof" : "") + '" role="status">' +
+        '<div class="nextmove">Where it stands</div><div class="name">' + esc(st.name) + "</div>" +
+        '<p class="move"><span class="nextmove">Next move</span>' + esc(st.move) + "</p></div>"
+    : '<p class="small">Answer both to see where it stands.</p>';
+}
+
+function renderLadder(){
+  var html = '<div class="trail">';
+  for (var j = 0; j < S.ladderNo; j++) {
+    html += '<div class="trail-row no"><span class="ans">NO</span><span>' + esc(TYPES[ORDER[j]].q) + "</span></div>";
+  }
+  if (S.type && S.type !== "skill") {
+    html += '<div class="trail-row yes"><span class="ans">YES</span><span>' + esc(TYPES[S.type].q) + "</span></div>";
+  } else if (S.type === "skill") {
+    for (var k = 0; k < 4; k++) {
+      html += '<div class="trail-row no"><span class="ans">NO</span><span>' + esc(TYPES[ORDER[k]].q) + "</span></div>";
+    }
+  }
+  html += "</div>";
+
+  if (!S.type) {
+    var q = ORDER[S.ladderNo];
+    html += '<div class="ladder-q"><div class="tag">Question ' + (S.ladderNo + 1) + " of 4</div>" +
+      "<h3>" + esc(TYPES[q].q) + "</h3>" +
+      '<div class="yn-big">' +
+      '<button type="button" class="chip" data-ans="yes">Yes</button>' +
+      '<button type="button" class="chip" data-ans="no">No</button></div></div>';
+    $("#ladder").innerHTML = html;
+    $("#resultBox").innerHTML = "";
+    return;
+  }
+
+  $("#ladder").innerHTML = html;
+  var T = TYPES[S.type];
+  var sentence = T.segs.map(function(s){
+    if (!s.b) return esc(s.t);
+    var v = S.blanks[S.type][s.b] || "";
+    return '<span class="bl"><input type="text" data-type="' + S.type + '" data-blank="' + esc(s.b) +
+      '" value="' + esc(v) + '" placeholder="' + esc(s.b) + '" aria-label="' + esc(s.b) + '"></span>';
+  }).join("");
+  $("#resultBox").innerHTML =
+    '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
+    (T.est ? '<p class="small est">This is an estimate from a class case. Say so out loud too.</p>' : "") +
+    '<div class="sentence">' + sentence + "</div>" +
+    '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>" +
+    '<p class="small">Missing parts stay as [brackets]. Fill what you can now, the rest later. ' +
+    '<button type="button" class="linkish" id="redoLadder">Answer the result questions again</button></p>';
+  $$("#resultBox .bl input").forEach(fitBlank);
+}
+
+function renderStep5(){
+  var st = statusInfo(), T = TYPES[S.type || "skill"];
+  $("#st5Status").innerHTML =
+    '<div class="st-chip">' + esc(st.name) + "</div>" +
+    '<p class="move2"><span class="nextmove">Next move</span>' + esc(st.move) + "</p>";
+  $("#st5Result").innerHTML =
+    '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
+    (T.est ? '<p class="small est">Estimate from a class case.</p>' : "") +
+    '<p class="big-sentence">' + hl(esc(typeText())) + "</p>" +
+    '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>";
+
+  $("#starTabs").innerHTML = Object.keys(STAR_LABELS).map(function(k){
+    return '<button type="button" class="tab' + (S.star === k ? " on" : "") + '" data-star="' + k + '">' + STAR_LABELS[k] + "</button>";
+  }).join("");
+  $("#starOut").innerHTML = starText().map(function(p){
+    return "<p><span class=\"sl\">" + p[0] + "</span>" + hl(esc(p[1])) + "</p>";
+  }).join("");
+
+  var groups = contactGroups(), msgs = messages();
+  $("#contacts").innerHTML = groups.map(function(g, i){
+    return '<div class="contact"><div class="tag">Group ' + (i + 1) + " \u00B7 " + esc(g.title) + "</div>" +
+      '<p class="small">' + esc(g.hint) + "</p>" +
+      '<div class="msg">' + hl(esc(msgs[i])) + "</div>" +
+      '<div class="btns"><button type="button" class="btn sm" data-copymsg="' + i + '">Copy Message</button>' +
+      '<a class="btn ghost sm" href="' + li(g.q) + '" target="_blank" rel="noopener">Find Them On LinkedIn</a></div></div>';
+  }).join("");
+}
+
+function renderGoal(){
+  $("#goalChips").innerHTML = GOALS.map(function(g){
+    return '<button type="button" class="chip' + (S.goal === g[0] ? " on" : "") + '" data-goal="' + g[0] + '">' + esc(g[1]) + "</button>";
+  }).join("");
+  $("#unsureNote").hidden = S.goal !== "unsure";
+}
+
+function render(){
+  renderStepper(); renderNav(); renderGoal(); renderChecks(); renderLadder(); renderStep5();
+}
+
+function showPanel(n){
+  $$(".panel").forEach(function(p){ p.classList.toggle("on", +p.dataset.step === n); });
+}
+function scrollTop(){ window.scrollTo({ top:0, behavior: RM ? "auto" : "smooth" }); }
+function goStep(n){
+  n = Math.max(1, Math.min(5, n));
+  S.step = n; S.maxStep = Math.max(S.maxStep, n);
+  render(); showPanel(n); scrollTop();
+}
+
+/* ---------- interactions ---------- */
+
+function toast(msg){
+  var t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove("show"); }, 1800);
+}
+
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); toast("Copied"); }
+  catch (e) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Copied"); }
+    catch (e2) { toast("Copy failed. Select the text manually"); }
+    ta.remove();
+  }
+}
+
+function syncInputs(){
+  $$("input[data-field], textarea[data-field]").forEach(function(el){ el.value = S[el.dataset.field] || ""; });
+}
+
+function loadExample(ex){
+  S.goal = ex.goal; S.role = ex.role; S.company = ex.company;
+  S.year = ex.year; S.course = ex.course; S.university = ex.university;
+  S.title = ex.title; S.unit = ex.unit; S.notes = ex.notes; S.grade = ex.grade;
+  S.open = ex.open; S.seen = ex.seen;
+  S.ladderNo = ex.ladderNo; S.type = ex.type;
+  S.blanks = blankState();
+  Object.assign(S.blanks[ex.type], ex.blanks || {});
+  S.star = ex.star;
+  syncInputs();
+  S.step = 5; S.maxStep = 5;
+  render(); showPanel(5); scrollTop();
+  toast("Example loaded");
+}
+
+function restart(){
+  S = {
+    step:1, maxStep:1, goal:"", role:"", company:"",
+    year:"", course:"", university:"", title:"", unit:"", notes:"", grade:"",
+    open:"", seen:"", ladderNo:0, type:"", blanks:blankState(), star:"mid"
+  };
+  syncInputs();
+  render(); showPanel(1); scrollTop();
+  $("#aiPrompt").hidden = true; $("#aiReply").hidden = true; $("#aiStatus").hidden = true;
+  $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true;
+}
+
+/* static bindings */
+EXAMPLES.forEach(function(ex){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = ex.name;
+  b.addEventListener("click", function(){ loadExample(ex); });
+  $("#exChips").appendChild(b);
+});
+
+$$("input[data-field], textarea[data-field]").forEach(function(el){
+  el.addEventListener("input", function(){
+    S[el.dataset.field] = el.value;
+    render();
+  });
+});
+
+$$(".nav [data-back]").forEach(function(b){ b.addEventListener("click", function(){ goStep(S.step - 1); }); });
+$$(".nav [data-next]").forEach(function(b){ b.addEventListener("click", function(){ if (stepOk(S.step)) goStep(S.step + 1); }); });
+
+$("#stepper").addEventListener("click", function(e){
+  var b = e.target.closest("[data-go]");
+  if (b && !b.disabled) goStep(+b.dataset.go);
+});
+
+$("#goalChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-goal]");
+  if (b) { S.goal = b.dataset.goal; render(); }
+});
+
+$("#checks").addEventListener("click", function(e){
+  var b = e.target.closest("[data-check]");
+  if (b) { S[b.dataset.check] = b.dataset.val; render(); }
+});
+
+$("#ladder").addEventListener("click", function(e){
+  var b = e.target.closest("[data-ans]");
+  if (b) {
+    if (b.dataset.ans === "yes") {
+      S.type = ORDER[S.ladderNo];
+    } else {
+      S.ladderNo++;
+      if (S.ladderNo >= 4) {
+        S.type = "skill";
+        if (field("grade") && !S.blanks.skill["grade"]) S.blanks.skill["grade"] = field("grade");
+      }
+    }
+    render();
+  }
+});
+
+$("#resultBox").addEventListener("input", function(e){
+  var inp = e.target;
+  if (inp.tagName !== "INPUT") return;
+  S.blanks[inp.dataset.type][inp.dataset.blank] = inp.value;
+  fitBlank(inp); /* no re-render: keeps focus while typing */
+});
+$("#resultBox").addEventListener("click", function(e){
+  if (e.target.id === "redoLadder") {
+    S.ladderNo = 0; S.type = "";
+    render();
+  }
+});
+
+$("#starTabs").addEventListener("click", function(e){
+  var b = e.target.closest("[data-star]");
+  if (b) { S.star = b.dataset.star; renderStep5(); }
+});
+
+$("#contacts").addEventListener("click", function(e){
+  var b = e.target.closest("[data-copymsg]");
+  if (b) copyText(messages()[+b.dataset.copymsg]);
+});
+
+$("#copyStar").addEventListener("click", function(){
+  copyText(starText().map(function(p){ return p[0] + ": " + p[1]; }).join("\n\n"));
+});
+
+$("#writeBtn").addEventListener("click", async function(){
+  var btn = $("#writeBtn");
+  var prompt = buildPrompt();
+  if (window.PROOF_AI_URL) {
+    btn.disabled = true; btn.textContent = "Thinking\u2026";
+    $("#aiStatus").hidden = false;
+    $("#aiStatus").textContent = "Asking the AI to write it\u2026";
+    try {
+      var res = await fetch(window.PROOF_AI_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ prompt: prompt })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var j = await res.json().catch(function(){ return null; });
+      var reply = j && (j.reply || j.text || j.output || j.message);
+      if (typeof j === "string") reply = j;
+      if (!reply) throw new Error("No reply");
+      $("#aiReply").textContent = reply;
+      $("#aiReply").hidden = false;
+      $("#aiStatus").textContent = "Written by AI. Check every fact before you use it.";
+      $("#aiPrompt").hidden = true; $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true;
+    } catch (err) {
+      $("#aiStatus").textContent = "Could not reach the AI service. Copy the prompt and use any AI chat instead.";
+      $("#aiPrompt").textContent = prompt;
+      $("#aiPrompt").hidden = false; $("#copyPromptBtn").hidden = false; $("#openAi").hidden = false;
+    }
+    btn.disabled = false; btn.textContent = "Write It For Me";
+  } else {
+    $("#aiPrompt").textContent = prompt;
+    $("#aiPrompt").hidden = false;
+    $("#copyPromptBtn").hidden = false;
+    $("#openAi").hidden = false;
+    $("#aiStatus").hidden = true;
+    $("#aiReply").hidden = true;
+  }
+});
+
+$("#copyPromptBtn").addEventListener("click", function(){ copyText(buildPrompt()); });
+
+$("#dl").addEventListener("click", function(){
+  var blob = new Blob([markdown()], { type:"text/markdown" });
+  var a = document.createElement("a");
+  var slug = (field("title") || "assignment").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "assignment";
+  a.href = URL.createObjectURL(blob);
+  a.download = "proof-card-" + slug + ".md";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+  toast("Proof card downloaded");
+});
+
+$("#restart").addEventListener("click", restart);
+
+/* init */
+render();
+showPanel(1);
+
+})();
+</script>
+</body>
+</html>
