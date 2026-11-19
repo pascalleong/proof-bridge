@@ -326,7 +326,8 @@
         <div class="btns">
           <button type="button" class="btn" id="writeBtn">Write It For Me</button>
           <button type="button" class="btn ghost" id="copyPromptBtn" hidden>Copy Prompt</button>
-          <a class="btn ghost" id="openAi" href="https://chatgpt.com" target="_blank" rel="noopener" hidden>Open ChatGPT</a>
+          <a class="btn ghost" id="openAi" href="https://ilmuchat.ai" target="_blank" rel="noopener" hidden>Open ILMUchat</a>
+          <a class="btn ghost" id="openAi2" href="https://chatgpt.com" target="_blank" rel="noopener" hidden>Open ChatGPT</a>
         </div>
         <div class="small" id="aiStatus" hidden></div>
         <pre id="aiPrompt" hidden></pre>
@@ -852,7 +853,7 @@ function restart(){
   syncInputs();
   render(); showPanel(1); scrollTop();
   $("#aiPrompt").hidden = true; $("#aiReply").hidden = true; $("#aiStatus").hidden = true;
-  $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true;
+  $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true; $("#openAi2").hidden = true;
 }
 
 /* static bindings */
@@ -952,18 +953,18 @@ $("#writeBtn").addEventListener("click", async function(){
       $("#aiReply").textContent = reply;
       $("#aiReply").hidden = false;
       $("#aiStatus").textContent = "Written by AI. Check every fact before you use it.";
-      $("#aiPrompt").hidden = true; $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true;
+      $("#aiPrompt").hidden = true; $("#copyPromptBtn").hidden = true; $("#openAi").hidden = true; $("#openAi2").hidden = true;
     } catch (err) {
       $("#aiStatus").textContent = "Could not reach the AI service. Copy the prompt and use any AI chat instead.";
       $("#aiPrompt").textContent = prompt;
-      $("#aiPrompt").hidden = false; $("#copyPromptBtn").hidden = false; $("#openAi").hidden = false;
+      $("#aiPrompt").hidden = false; $("#copyPromptBtn").hidden = false; $("#openAi").hidden = false; $("#openAi2").hidden = false;
     }
     btn.disabled = false; btn.textContent = "Write It For Me";
   } else {
     $("#aiPrompt").textContent = prompt;
     $("#aiPrompt").hidden = false;
     $("#copyPromptBtn").hidden = false;
-    $("#openAi").hidden = false;
+    $("#openAi").hidden = false; $("#openAi2").hidden = false;
     $("#aiStatus").hidden = true;
     $("#aiReply").hidden = true;
   }
