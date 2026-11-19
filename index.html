@@ -11,12 +11,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#020817; --s1:#0A1325; --s2:#0F1A30; --input:rgba(241,245,249,0.04);
-    --line:#1B2942; --line2:#2C3E5C;
-    --fg:#F1F5F9; --muted:#8A9BB5; --subtle:#5B6B85;
-    --acc:#2DD4BF; --acc-h:#14B8A6; --acc-p:#0D9488; --acc-ink:#020817;
+    /* base surfaces */
+    --bg:#0B1020; --s1:#111832; --s2:#18224A; --input:rgba(241,245,249,0.05);
+    --line:#232F52; --line2:#35446E;
+    --fg:#F1F5F9; --muted:#9AACC9; --subtle:#7286A8; --gap:#E3C27E;
+    /* brand teal: main buttons, selected chips, links */
+    --acc:#2DD4BF; --acc-h:#5EEAD4; --acc-p:#14B8A6; --acc-ink:#0B1020;
     --link:#5EEAD4; --ring:0 0 0 2px rgba(94,234,212,0.55);
     --glow:0 0 0 1px #5EEAD4, 0 0 24px rgba(45,212,191,0.35);
+    /* the five steps: 1 goal, 2 the work, 3 where it stands, 4 the result, 5 proof card */
+    --c1:#A78BFA; --c2:#38BDF8; --c3:#FBBF24; --c4:#FB7185; --c5:#2DD4BF;
+    /* where it stands */
+    --st-proof:#34D399; --st-ready:#38BDF8; --st-seen:#FBBF24; --st-none:#FB7185;
+    /* result types */
+    --t-outcome:#4ADE80; --t-build:#38BDF8; --t-analysis:#A78BFA; --t-case:#FBBF24; --t-skill:#94A3B8;
     --r:6px;
   }
   *{box-sizing:border-box}
@@ -26,18 +34,19 @@
     font:16px/1.6 Inter,system-ui,-apple-system,sans-serif;
     -webkit-font-smoothing:antialiased;
     background-image:
-      linear-gradient(rgba(94,234,212,0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(94,234,212,0.035) 1px, transparent 1px);
-    background-size:44px 44px;
+      radial-gradient(720px 420px at 12% -8%, rgba(167,139,250,0.13), transparent 62%),
+      radial-gradient(880px 460px at 88% -12%, rgba(56,189,248,0.10), transparent 62%),
+      radial-gradient(900px 520px at 50% 112%, rgba(45,212,191,0.07), transparent 62%),
+      linear-gradient(rgba(148,163,184,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,0.035) 1px, transparent 1px);
+    background-size:auto,auto,auto,44px 44px,44px 44px;
   }
-  body::before{content:"";position:fixed;inset:0;pointer-events:none;
-    background:radial-gradient(620px 320px at 50% -80px, rgba(45,212,191,0.09), transparent 70%);}
   main{max-width:680px;margin:0 auto;padding:26px 16px 56px;position:relative}
 
   .mono,.eyebrow,.step-tag,.tag,.sl,.axis,.seg-label{font-family:"JetBrains Mono",ui-monospace,monospace}
   .eyebrow{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   h1{font-size:clamp(30px,8vw,44px);line-height:1.06;letter-spacing:-.03em;margin:12px 0 12px;font-weight:800}
-  h1 span{color:var(--acc)}
+  h1 span{background:linear-gradient(92deg,var(--c5),var(--c2) 48%,var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
   h2{font-size:20px;margin:0 0 6px;letter-spacing:-.01em;font-weight:700}
   .lede{color:var(--muted);margin:0 0 20px;max-width:56ch;font-size:15.5px}
   .small{font-size:13.5px;color:var(--muted);margin:8px 0}
@@ -46,9 +55,20 @@
   b{color:var(--fg)}
 
   /* surfaces */
-  .card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:20px 18px;margin:0 0 14px}
-  .step-tag{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
-  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:0 0 6px}
+  .card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:20px 18px;margin:0 0 14px;
+    box-shadow:0 8px 28px rgba(3,7,18,0.35)}
+  .panel[data-step="1"] .card{border-top:3px solid var(--c1)}
+  .panel[data-step="2"] .card{border-top:3px solid var(--c2)}
+  .panel[data-step="3"] .card{border-top:3px solid var(--c3)}
+  .panel[data-step="4"] .card{border-top:3px solid var(--c4)}
+  .panel[data-step="5"] .card{border-top:3px solid var(--c5)}
+  .panel[data-step="1"] .step-tag{color:var(--c1)}
+  .panel[data-step="2"] .step-tag{color:var(--c2)}
+  .panel[data-step="3"] .step-tag{color:var(--c3)}
+  .panel[data-step="4"] .step-tag{color:var(--c4)}
+  .panel[data-step="5"] .step-tag{color:var(--c5)}
+  .step-tag{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--link);margin:0 0 6px}
 
   /* stepper */
   .stepper{margin:6px 0 16px}
@@ -56,10 +76,19 @@
   .stepper-top .mono{font-size:10.5px;font-weight:600;letter-spacing:.14em;color:var(--subtle);text-transform:uppercase}
   .stepper-top .seg-label{font-size:10.5px;font-weight:600;letter-spacing:.12em;color:var(--fg);text-transform:uppercase;text-align:right}
   .bars{display:flex;gap:6px}
-  .seg{flex:1;height:4px;padding:0;border:0;border-radius:2px;background:var(--line);cursor:pointer}
-  .seg.done{background:var(--acc)}
-  .seg.cur{background:var(--acc);box-shadow:0 0 12px rgba(45,212,191,0.5)}
-  .seg:disabled{cursor:default}
+  .seg{flex:1;height:4px;padding:0;border:0;border-radius:2px;background:var(--line);cursor:pointer;transition:background .2s}
+  .seg:nth-child(1){background:var(--c1)}
+  .seg:nth-child(2){background:var(--c2)}
+  .seg:nth-child(3){background:var(--c3)}
+  .seg:nth-child(4){background:var(--c4)}
+  .seg:nth-child(5){background:var(--c5)}
+  .seg:disabled{opacity:.3;cursor:default}
+  .seg.cur{opacity:1;box-shadow:0 0 12px rgba(241,245,249,0.35)}
+  .seg.cur:nth-child(1){box-shadow:0 0 12px rgba(167,139,250,0.7)}
+  .seg.cur:nth-child(2){box-shadow:0 0 12px rgba(56,189,248,0.7)}
+  .seg.cur:nth-child(3){box-shadow:0 0 12px rgba(251,191,36,0.7)}
+  .seg.cur:nth-child(4){box-shadow:0 0 12px rgba(251,113,133,0.7)}
+  .seg.cur:nth-child(5){box-shadow:0 0 12px rgba(45,212,191,0.7)}
 
   /* panels */
   .panel{display:none}
@@ -84,9 +113,9 @@
   .chip{
     border:1px solid var(--line2);background:var(--input);color:var(--fg);border-radius:var(--r);
     padding:10px 14px;min-height:42px;font:500 14px/1.2 Inter,system-ui,sans-serif;cursor:pointer;
-    transition:border-color .15s,background .15s;
+    transition:border-color .15s,background .15s,transform .15s;
   }
-  .chip:hover{border-color:var(--link)}
+  .chip:hover{border-color:var(--link);background:rgba(45,212,191,0.08)}
   .chip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700;box-shadow:var(--glow)}
 
   /* buttons */
@@ -107,6 +136,24 @@
   .nav{display:flex;align-items:center;gap:12px;margin-top:16px}
   .nav .hint{flex:1;color:var(--subtle);font-size:13px;text-align:right}
 
+  /* step 3: each status keeps its words and gets its own hue */
+  .mcell[data-k="proof"].on{border-color:var(--st-proof);background:rgba(52,211,153,0.10);box-shadow:0 0 0 1px var(--st-proof),0 0 24px rgba(52,211,153,0.28)}
+  .mcell[data-k="ready"].on{border-color:var(--st-ready);background:rgba(56,189,248,0.10);box-shadow:0 0 0 1px var(--st-ready),0 0 24px rgba(56,189,248,0.28)}
+  .mcell[data-k="seen"].on{border-color:var(--st-seen);background:rgba(251,191,36,0.10);box-shadow:0 0 0 1px var(--st-seen),0 0 24px rgba(251,191,36,0.26)}
+  .mcell[data-k="none"].on{border-color:var(--st-none);background:rgba(251,113,133,0.10);box-shadow:0 0 0 1px var(--st-none),0 0 24px rgba(251,113,133,0.28)}
+  .banner.st-proof{border-color:rgba(52,211,153,0.45);background:linear-gradient(180deg,rgba(52,211,153,0.12),rgba(52,211,153,0.03)),var(--s2);box-shadow:0 0 0 1px rgba(52,211,153,0.35),0 0 28px rgba(52,211,153,0.20)}
+  .banner.st-proof .name{color:var(--st-proof)}
+  .banner.st-proof .nextmove{color:var(--st-proof)}
+  .banner.st-ready{border-color:rgba(56,189,248,0.45);background:linear-gradient(180deg,rgba(56,189,248,0.12),rgba(56,189,248,0.03)),var(--s2)}
+  .banner.st-ready .name{color:var(--st-ready)}
+  .banner.st-ready .nextmove{color:var(--st-ready)}
+  .banner.st-seen{border-color:rgba(251,191,36,0.45);background:linear-gradient(180deg,rgba(251,191,36,0.12),rgba(251,191,36,0.03)),var(--s2)}
+  .banner.st-seen .name{color:var(--st-seen)}
+  .banner.st-seen .nextmove{color:var(--st-seen)}
+  .banner.st-none{border-color:rgba(251,113,133,0.45);background:linear-gradient(180deg,rgba(251,113,133,0.12),rgba(251,113,133,0.03)),var(--s2)}
+  .banner.st-none .name{color:var(--st-none)}
+  .banner.st-none .nextmove{color:var(--st-none)}
+
   /* step 3 */
   .q{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
   #checks .q:first-child{border-top:0;padding-top:4px}
@@ -117,15 +164,43 @@
   .mcell{
     border:1px dashed var(--line2);border-radius:var(--r);padding:12px 10px;min-height:66px;
     display:flex;align-items:center;justify-content:center;text-align:center;
-    font-size:13px;color:var(--subtle);transition:border-color .2s,color .2s;
+    font-size:13px;color:var(--subtle);transition:border-color .2s,color .2s,background .2s;
   }
-  .mcell.on{border:1px solid var(--acc);color:var(--fg);font-weight:700;background:rgba(45,212,191,0.08);box-shadow:var(--glow)}
+  .mcell.on{color:var(--fg);font-weight:700}
   .axis{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);text-align:center}
   .banner{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--s2)}
-  .banner.is-proof{box-shadow:var(--glow)}
   .banner .name{font-size:19px;font-weight:800;margin:2px 0 4px}
   .banner .move{margin:0;color:var(--muted);font-size:14px}
-  .nextmove{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-right:6px}
+  .nextmove{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--link);margin-right:6px}
+
+  /* step 4: the five result types */
+  .st-chip{display:inline-block;font:700 12px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--acc-ink);border-radius:var(--r);padding:6px 10px;margin-bottom:8px;background:var(--acc)}
+  .st-chip.st-proof{background:var(--st-proof)}
+  .st-chip.st-ready{background:var(--st-ready)}
+  .st-chip.st-seen{background:var(--st-seen)}
+  .st-chip.st-none{background:var(--st-none)}
+  .move2{color:var(--muted);font-size:14.5px;margin:6px 0 0}
+  .move2 .nextmove{color:var(--link)}
+  .st-proof .move2 .nextmove{color:var(--st-proof)}
+  .st-ready .move2 .nextmove{color:var(--st-ready)}
+  .st-seen .move2 .nextmove{color:var(--st-seen)}
+  .st-none .move2 .nextmove{color:var(--st-none)}
+  .ty-outcome{color:var(--t-outcome)}
+  .ty-build{color:var(--t-build)}
+  .ty-analysis{color:var(--t-analysis)}
+  .ty-case{color:var(--t-case)}
+  .ty-skill{color:var(--t-skill)}
+  .sentence.ty-outcome{border-color:rgba(74,222,128,0.5);background:linear-gradient(180deg,rgba(74,222,128,0.10),rgba(74,222,128,0.02)),var(--s2);box-shadow:0 0 0 1px rgba(74,222,128,0.30),0 0 24px rgba(74,222,128,0.18)}
+  .sentence.ty-build{border-color:rgba(56,189,248,0.5);background:linear-gradient(180deg,rgba(56,189,248,0.10),rgba(56,189,248,0.02)),var(--s2);box-shadow:0 0 0 1px rgba(56,189,248,0.30),0 0 24px rgba(56,189,248,0.18)}
+  .sentence.ty-analysis{border-color:rgba(167,139,250,0.5);background:linear-gradient(180deg,rgba(167,139,250,0.10),rgba(167,139,250,0.02)),var(--s2);box-shadow:0 0 0 1px rgba(167,139,250,0.30),0 0 24px rgba(167,139,250,0.18)}
+  .sentence.ty-case{border-color:rgba(251,191,36,0.5);background:linear-gradient(180deg,rgba(251,191,36,0.10),rgba(251,191,36,0.02)),var(--s2);box-shadow:0 0 0 1px rgba(251,191,36,0.30),0 0 24px rgba(251,191,36,0.16)}
+  .sentence.ty-skill{border-color:rgba(148,163,184,0.5);background:linear-gradient(180deg,rgba(148,163,184,0.10),rgba(148,163,184,0.02)),var(--s2);box-shadow:0 0 0 1px rgba(148,163,184,0.30),0 0 24px rgba(148,163,184,0.16)}
+  .big-sentence.ty-outcome{border-color:rgba(74,222,128,0.5);background:linear-gradient(180deg,rgba(74,222,128,0.10),rgba(74,222,128,0.02)),var(--s2)}
+  .big-sentence.ty-build{border-color:rgba(56,189,248,0.5);background:linear-gradient(180deg,rgba(56,189,248,0.10),rgba(56,189,248,0.02)),var(--s2)}
+  .big-sentence.ty-analysis{border-color:rgba(167,139,250,0.5);background:linear-gradient(180deg,rgba(167,139,250,0.10),rgba(167,139,250,0.02)),var(--s2)}
+  .big-sentence.ty-case{border-color:rgba(251,191,36,0.5);background:linear-gradient(180deg,rgba(251,191,36,0.10),rgba(251,191,36,0.02)),var(--s2)}
+  .big-sentence.ty-skill{border-color:rgba(148,163,184,0.5);background:linear-gradient(180deg,rgba(148,163,184,0.10),rgba(148,163,184,0.02)),var(--s2)}
 
   /* step 4 ladder */
   .trail{margin:4px 0 6px}
@@ -133,15 +208,24 @@
   .trail-row:first-child{border-top:0}
   .trail-row .ans{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;flex-shrink:0}
   .trail-row.no .ans{color:var(--subtle)}
-  .trail-row.yes .ans{color:var(--acc)}
+  .trail-row.yes .ans{color:var(--t-outcome)}
+  .trail-row.yes.outcome .ans{color:var(--t-outcome)}
+  .trail-row.yes.build .ans{color:var(--t-build)}
+  .trail-row.yes.analysis .ans{color:var(--t-analysis)}
+  .trail-row.yes.case .ans{color:var(--t-case)}
   .ladder-q{padding:14px 0 4px}
   .ladder-q h3{font-size:19px;margin:4px 0 14px;font-weight:700}
   .yn-big{display:flex;gap:10px;flex-wrap:wrap}
   .yn-big .chip{min-width:110px;min-height:46px;font-size:15px}
   .sentence{
     display:flex;flex-wrap:wrap;align-items:center;row-gap:10px;font-size:17px;line-height:1.9;font-weight:500;
-    background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:10px 0;box-shadow:var(--glow);
+    background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:10px 0;
   }
+  .tag.ty-outcome{color:var(--t-outcome)}
+  .tag.ty-build{color:var(--t-build)}
+  .tag.ty-analysis{color:var(--t-analysis)}
+  .tag.ty-case{color:var(--t-case)}
+  .tag.ty-skill{color:var(--t-skill)}
   .bl{display:inline-flex;align-items:center;color:var(--subtle);margin:0 1px}
   .bl::before{content:"[";}
   .bl::after{content:"]";}
@@ -150,13 +234,11 @@
     color:var(--fg);font:inherit;font-size:15.5px;width:8ch;min-width:4ch;max-width:100%;
   }
   .bl input:focus{outline:none;border-color:var(--link);box-shadow:var(--ring)}
-  .gap{color:var(--subtle);background:var(--input);border-radius:3px;padding:0 3px}
+  .gap{color:var(--gap);background:rgba(227,194,126,0.10);border-radius:3px;padding:0 3px}
   .est{color:var(--link)}
   .linkish{background:none;border:0;padding:0;color:var(--link);font:500 13px Inter,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
   /* step 5 */
-  .st-chip{display:inline-block;font:700 12px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--acc-ink);background:var(--acc);border-radius:var(--r);padding:6px 10px;margin-bottom:8px}
   .move2{color:var(--muted);font-size:14.5px;margin:6px 0 0}
   .big-sentence{font-size:17px;font-weight:600;line-height:1.8;margin:8px 0 4px;
     background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
@@ -164,17 +246,21 @@
   .tab{border:1px solid var(--line2);background:var(--input);color:var(--fg);border-radius:var(--r);
     padding:8px 12px;min-height:36px;font:500 13px Inter,sans-serif;cursor:pointer;transition:border-color .15s}
   .tab:hover{border-color:var(--link)}
-  .tab.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700}
+  .tab.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700;box-shadow:var(--glow)}
   .star p{margin:10px 0;font-size:14.5px}
-  .sl{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);
+  .star p:nth-child(4) .sl{color:var(--t-outcome)}
+  .sl{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--link);
     display:inline-block;min-width:82px;margin-right:6px}
+  .reply{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--s2);border:1px solid var(--line);
+    border-left:3px solid var(--acc);border-radius:var(--r);padding:14px;font-size:14.5px;line-height:1.65;margin:10px 0}
   .contact{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:12px 0;background:var(--s2)}
   .msg{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--input);border:1px solid var(--line);
     border-radius:var(--r);padding:12px;font-size:14px;line-height:1.65;margin:8px 0}
   pre#aiPrompt{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--input);border:1px solid var(--line);
     border-radius:var(--r);padding:14px;font:12.5px/1.6 "JetBrains Mono",monospace;max-height:280px;overflow:auto;margin:10px 0}
-  .reply{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--s2);border:1px solid var(--line);
-    border-left:3px solid var(--acc);border-radius:var(--r);padding:14px;font-size:14.5px;line-height:1.65;margin:10px 0}
+  .contact .tag{color:var(--c2)}
+  .contact:nth-of-type(2) .tag{color:var(--c1)}
+  .contact:nth-of-type(3) .tag{color:var(--c5)}
 
   footer{margin-top:28px;padding-top:4px}
   footer .btns{flex-direction:column;gap:10px;margin:20px 0 8px}
@@ -704,7 +790,7 @@ function renderChecks(){
   var st = statusInfo();
   $$(".mcell").forEach(function(c){ c.classList.toggle("on", answered && c.dataset.k === st.key); });
   $("#statusBanner").innerHTML = answered
-    ? '<div class="banner' + (st.key === "proof" ? " is-proof" : "") + '" role="status">' +
+    ? '<div class="banner st-' + st.key + '" role="status">' +
         '<div class="nextmove">Where it stands</div><div class="name">' + esc(st.name) + "</div>" +
         '<p class="move"><span class="nextmove">Next move</span>' + esc(st.move) + "</p></div>"
     : '<p class="small">Answer both to see where it stands.</p>';
@@ -716,7 +802,7 @@ function renderLadder(){
     html += '<div class="trail-row no"><span class="ans">NO</span><span>' + esc(TYPES[ORDER[j]].q) + "</span></div>";
   }
   if (S.type && S.type !== "skill") {
-    html += '<div class="trail-row yes"><span class="ans">YES</span><span>' + esc(TYPES[S.type].q) + "</span></div>";
+    html += '<div class="trail-row yes ' + S.type + '"><span class="ans">YES</span><span>' + esc(TYPES[S.type].q) + "</span></div>";
   } else if (S.type === "skill") {
     for (var k = 0; k < 4; k++) {
       html += '<div class="trail-row no"><span class="ans">NO</span><span>' + esc(TYPES[ORDER[k]].q) + "</span></div>";
@@ -745,9 +831,9 @@ function renderLadder(){
       '" value="' + esc(v) + '" placeholder="' + esc(s.b) + '" aria-label="' + esc(s.b) + '"></span>';
   }).join("");
   $("#resultBox").innerHTML =
-    '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
+    '<div class="tag ty-' + S.type + '">Result \u00B7 ' + esc(T.name) + "</div>" +
     (T.est ? '<p class="small est">This is an estimate from a class case. Say so out loud too.</p>' : "") +
-    '<div class="sentence">' + sentence + "</div>" +
+    '<div class="sentence ty-' + S.type + '">' + sentence + "</div>" +
     '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>" +
     '<p class="small">Missing parts stay as [brackets]. Fill what you can now, the rest later. ' +
     '<button type="button" class="linkish" id="redoLadder">Answer the result questions again</button></p>';
@@ -755,14 +841,14 @@ function renderLadder(){
 }
 
 function renderStep5(){
-  var st = statusInfo(), T = TYPES[S.type || "skill"];
+  var st = statusInfo(), T = TYPES[S.type || "skill"], ty = S.type || "skill";
   $("#st5Status").innerHTML =
-    '<div class="st-chip">' + esc(st.name) + "</div>" +
-    '<p class="move2"><span class="nextmove">Next move</span>' + esc(st.move) + "</p>";
+    '<div class="st-chip st-' + st.key + '">' + esc(st.name) + "</div>" +
+    '<div class="move2 st-' + st.key + '"><span class="nextmove">Next move</span>' + esc(st.move) + "</div>";
   $("#st5Result").innerHTML =
-    '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
+    '<div class="tag ty-' + ty + '">Result \u00B7 ' + esc(T.name) + "</div>" +
     (T.est ? '<p class="small est">Estimate from a class case.</p>' : "") +
-    '<p class="big-sentence">' + hl(esc(typeText())) + "</p>" +
+    '<p class="big-sentence ty-' + ty + '">' + hl(esc(typeText())) + "</p>" +
     '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>";
 
   $("#starTabs").innerHTML = Object.keys(STAR_LABELS).map(function(k){
