@@ -15,6 +15,7 @@
     --line:#1B2942; --line2:#2C3E5C;
     --fg:#F1F5F9; --muted:#8A9BB5; --subtle:#5B6B85;
     --acc:#2DD4BF; --acc-h:#14B8A6; --acc-p:#0D9488; --acc-ink:#020817;
+    --acc-soft:rgba(45, 212, 191, 0.10);
     --link:#5EEAD4; --ring:0 0 0 2px rgba(94,234,212,0.55);
     --glow:0 0 0 1px #5EEAD4, 0 0 24px rgba(45,212,191,0.35);
     --r:6px;
@@ -150,14 +151,20 @@
     color:var(--fg);font:inherit;font-size:15.5px;width:8ch;min-width:4ch;max-width:100%;
   }
   .bl input:focus{outline:none;border-color:var(--link);box-shadow:var(--ring)}
-  .gap{color:var(--subtle);background:var(--input);border-radius:3px;padding:0 3px}
+  .gap{color:var(--acc);background:var(--acc-soft);border-radius:3px;padding:0 3px}
   .est{color:var(--link)}
   .linkish{background:none;border:0;padding:0;color:var(--link);font:500 13px Inter,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
   /* step 5 */
   .st-chip{display:inline-block;font:700 12px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--acc-ink);background:var(--acc);border-radius:var(--r);padding:6px 10px;margin-bottom:8px}
-  .move2{color:var(--muted);font-size:14.5px;margin:6px 0 0}
+    color:var(--acc-ink);border:1px solid transparent;border-radius:var(--r);padding:6px 10px;margin-bottom:8px;background:var(--acc)}
+  .st-chip.st-proof{background:var(--acc)}
+  .st-chip.st-ready,.st-chip.st-seen,.st-chip.st-none{
+    background:var(--acc-soft);color:var(--acc);border-color:var(--acc);
+  }
+  .move2{color:var(--fg);font-size:14.5px;margin:6px 0 0}
+  .move2 .nextmove{color:var(--link)}
+  .move2.st-proof .nextmove{color:var(--acc)}
   .big-sentence{font-size:17px;font-weight:600;line-height:1.8;margin:8px 0 4px;
     background:var(--s2);border:1px solid var(--line);border-radius:var(--r);padding:14px}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
@@ -205,6 +212,11 @@
     <div class="chips" id="exChips"></div>
   </header>
 
+  <div class="card">
+    <div class="eyebrow">V1 · ROUGH GUIDE</div>
+    <p class="small" style="margin:6px 0 0">This is version 1. It builds your proof from fixed templates. No AI writes it for you, so a few lines may read stiff or use the wrong word. Treat the result as a direction, then fix it in your own words. Spot something off? DM me at <a href="https://linktr.ee/pascalleonghx" target="_blank" rel="noopener">@pascalleonghx</a>.</p>
+  </div>
+
   <nav class="stepper" id="stepper" aria-label="Progress"></nav>
 
   <div id="panels">
@@ -215,7 +227,9 @@
         <div class="step-tag">Step 1 · Your goal</div>
         <h2>What do you want next?</h2>
         <div class="chips" id="goalChips" style="margin-top:12px"></div>
-        <p class="small" id="unsureNote" hidden>No pressure, we'll line this up like a first internship.</p>
+        <p class="small" id="unsureNote" hidden>No pressure, we'll set it up for a big company. You can change it later.</p>
+        <label class="f">What are you after?</label>
+        <div class="chips" id="levelChips" style="margin-top:12px"></div>
         <label class="f" for="role">What role do you want?</label>
         <input type="text" id="role" data-field="role" placeholder="e.g. data analyst" autocomplete="off">
         <label class="f" for="company">Target company <span class="opt">(optional)</span></label>
@@ -336,7 +350,8 @@
       <div class="card">
         <h2>Keep it</h2>
         <div class="btns">
-          <button type="button" class="btn" id="dl">Download Proof Card</button>
+          <button type="button" class="btn" id="dl">Download (.md)</button>
+          <button type="button" class="btn ghost" id="pdf">Save as PDF</button>
           <button type="button" class="btn ghost" id="restart">Start Another Assignment</button>
         </div>
         <p class="small">Keep every card in one folder. That folder is what you read the night before interviews.</p>
@@ -350,6 +365,16 @@
   </div>
 
   <footer>
+    <h2>Built for one kind of student</h2>
+    <p class="small">I build free tools for one kind of student: you study hard, you score well, and you still can't tell what your degree is buying you. If that's you, here is what else is on my site:</p>
+    <ul>
+      <li>Free calculators and diagnostics for your degree</li>
+      <li>The Unit Navigator: a guide to which units to keep and which to question</li>
+      <li>The Dictionary: plain definitions of every term I use</li>
+      <li>Essays on how the university game works</li>
+      <li>The Tuesday Issue: my weekly newsletter</li>
+    </ul>
+    <p class="small">Every tool starts from first principles: your degree, your numbers, your market. Generic tips fit everyone, which means they help no one stand out.</p>
     <p class="small">You just turned 1 assignment into proof. Your degree holds 4 Hidden Assets that can do the same for you.</p>
     <div class="btns">
       <a class="btn" href="https://pascalleonghx.me/?utm_source=proof-bridge&amp;utm_medium=footer" target="_blank" rel="noopener">Show Me The 4 Hidden Assets</a>
@@ -379,11 +404,16 @@ function li(q){ return "https://www.linkedin.com/search/results/people/?keywords
 /* ---------- data ---------- */
 
 var GOALS = [
-  ["big", "A job at a big company"],
-  ["start", "A startup or my own company"],
-  ["intern", "My first internship"],
+  ["big", "A big company (MNC, GLC or listed)"],
+  ["sme", "An SME (small or mid-size business)"],
+  ["start", "A startup"],
   ["research", "Research or a Master's"],
   ["unsure", "Not sure yet"]
+];
+
+var LEVELS = [
+  ["intern", "An internship"],
+  ["job", "A full-time job"]
 ];
 
 var CHECK_QS = [
@@ -397,11 +427,11 @@ var TYPES = {
     segs:[{t:"Helped "},{b:"who"},{t:" go from "},{b:"before"},{t:" to "},{b:"after"},{t:" in "},{b:"time"},{t:"."}],
     tip:"Ask the person you helped for a one-line quote you can show." },
   build: { name:"Working build", q:"Did you build something that works?",
-    segs:[{t:"Built "},{b:"what"},{t:" that "},{b:"does what"},{t:", used by "},{b:"how many"},{t:" people."}],
+    segs:[{t:"Built "},{b:"what"},{t:" that "},{b:"does what"},{t:". "},{b:"how many"},{t:" people used it, and "},{b:"what changed, with a number"},{t:"."}],
     tip:"Get 3 real people to use it and note what changed for them." },
   analysis: { name:"Real analysis", q:"Did you use real data or real sources?",
-    segs:[{t:"Analysed "},{b:"how much data"},{t:" and found "},{b:"finding"},{t:" that matters to "},{b:"who"},{t:"."}],
-    tip:"Turn it into a tool or template someone else can use." },
+    segs:[{t:"Analysed "},{b:"how much data"},{t:" and found "},{b:"finding"},{t:". If "},{b:"who"},{t:" acts on it, my estimate: "},{b:"impact, with a number"},{t:", assuming "},{b:"key assumption"},{t:"."}],
+    est:true, tip:"Turn it into a tool or template someone else can use." },
   case: { name:"Class case", q:"Was it a case where you recommended a decision?",
     segs:[{t:"For "},{b:"company in the case"},{t:", I recommended "},{b:"decision"},{t:". My estimate: "},{b:"result"},{t:" within "},{b:"time"},{t:", assuming "},{b:"key assumption"},{t:"."}],
     est:true, tip:"Redo it with real data or real sources." },
@@ -410,30 +440,45 @@ var TYPES = {
     tip:"Use it on a real case and recommend one decision." }
 };
 
+var BLANK_PH = {
+  outcome: { "who":"e.g. my uncle's sundry shop", "before":"e.g. ran out of stock 4 times a week",
+    "after":"e.g. ran out once", "time":"e.g. 6 weeks" },
+  build: { "what":"e.g. a Google Sheet", "does what":"e.g. flags items running low", "how many":"e.g. 12",
+    "what changed, with a number":"e.g. stock checks went from 1 hour to 10 minutes" },
+  analysis: { "how much data":"e.g. 10,000 customer records", "finding":"e.g. under-25s leave twice as often",
+    "who":"e.g. the bank's retention team", "impact, with a number":"e.g. 10% fewer customers leaving a year",
+    "key assumption":"e.g. one fix works like past pilots" },
+  case: { "company in the case":"e.g. DuitKopi", "decision":"e.g. campus deals before cashback",
+    "result":"e.g. break-even", "time":"e.g. 8 months", "key assumption":"e.g. 5% of students adopt it" },
+  skill: { "grade":"e.g. 84/100", "x":"e.g. 10", "class size":"e.g. 120", "skill":"e.g. build a churn model in Python" }
+};
+
 var STAR_LABELS = { short:"30 Seconds", mid:"1 Minute", long:"2 Minutes" };
 var STAR_WORDS = { short:"75", mid:"150", long:"300" };
 
 var EXAMPLES = [
   { name:"Bank Churn Analysis",
-    goal:"big", role:"Data analyst", company:"a Malaysian bank",
+    goal:"big", level:"job", role:"Data analyst", company:"a Malaysian bank",
     year:"2", course:"Business Analytics", university:"Universiti Malaya",
     title:"Why customers leave a bank app", unit:"Business Analytics", grade:"84/100",
-    notes:"Used a public dataset of 10,000 bank customers.\nCleaned the data in Python and ran a churn model.\nFound that customers under 25 without a debit card leave about twice as often.\nWrote 3 fixes the bank could test.\nThe full report is on my GitHub.",
+    notes:"Used a public dataset of 10,000 bank customers.\nCleaned the data in Python and ran a churn model.\nFound that customers under 25 without a debit card leave about twice as often.\nWrote 3 fixes the bank could test.\nThe full report is on my GitHub.\nEstimated that one fix could cut churn for under-25s by 10%.",
     open:"yes", seen:"no", ladderNo:2, type:"analysis", star:"mid",
     blanks:{ "how much data":"a public dataset of 10,000 bank customers",
       "finding":"customers under 25 without a card leave about twice as often",
-      "who":"the bank's retention team" } },
+      "who":"the bank's retention team",
+      "impact, with a number":"about 10% fewer under-25 customers leaving each year",
+      "key assumption":"one of my 3 fixes works as well as similar bank pilots" } },
   { name:"Sundry Shop Stock Tracker",
-    goal:"intern", role:"Operations intern", company:"",
+    goal:"sme", level:"intern", role:"Operations assistant", company:"",
     year:"2", course:"Business Administration", university:"Politeknik Ungku Omar",
     title:"Stock tracker for a sundry shop", unit:"Operations Management", grade:"",
     notes:"Built a Google Sheet that flags items running low.\nMy uncle's shop in Ipoh used it for 6 weeks.\nBefore, he ran out of rice and cooking oil most weeks.\nWith the sheet, he ran out once in 6 weeks.\nHe still opens it every morning.",
     open:"yes", seen:"yes", ladderNo:0, type:"outcome", star:"short",
     blanks:{ "who":"my uncle's sundry shop in Ipoh",
       "before":"running out of rice and cooking oil most weeks",
-      "after":"running out once in 6 weeks", "time":"6 weeks" } },
+      "after":"running out once", "time":"6 weeks" } },
   { name:"E-Wallet Case Study",
-    goal:"start", role:"Business analyst", company:"",
+    goal:"start", level:"intern", role:"Business analyst", company:"",
     year:"3", course:"Finance", university:"Taylor's University",
     title:"Should an e-wallet go after students?", unit:"Strategic Management", grade:"A-",
     notes:"Class case on DuitKopi, a fictional e-wallet.\nCompared 3 options: campus deals, cashback, student loans.\nRecommended campus deals first.\nBuilt a simple payback model with my own assumptions.\nSent my write-up to a friend in the fintech society, who read it.",
@@ -447,7 +492,7 @@ var EXAMPLES = [
 
 var S = {
   step:1, maxStep:1,
-  goal:"", role:"", company:"",
+  goal:"", level:"intern", role:"", company:"",
   year:"", course:"", university:"",
   title:"", unit:"", notes:"", grade:"",
   open:"", seen:"",
@@ -472,11 +517,16 @@ function yearPhrase(){ var o = ordinalYear(); return o ? o + "-year " : ""; }
 
 /* ---------- core logic ---------- */
 
-function lane(){ return S.goal === "unsure" ? "intern" : S.goal; }
+function lane(){ return S.goal === "unsure" ? "big" : S.goal; }
 function goalLabel(){
-  if (S.goal === "unsure") return "first internship (not sure yet)";
+  if (S.goal === "unsure") return "Not sure yet (set up for a big company)";
   var m = {}; GOALS.forEach(function(g){ m[g[0]] = g[1]; });
   return m[S.goal] || "[add: goal]";
+}
+function aAn(w){ return /^[aeiou]/i.test(String(w)) ? "an" : "a"; }
+function levelText(){
+  if (lane() === "research") return "research assistant or Master's place";
+  return S.level === "job" ? "graduate role" : "internship";
 }
 
 function statusInfo(){
@@ -503,8 +553,8 @@ function clauseText(){
   function b(l){ return S.blanks[t][l] || "[" + l + "]"; }
   switch (t) {
     case "outcome":  return "helped " + b("who") + " go from " + b("before") + " to " + b("after") + " in " + b("time");
-    case "build":    return "built " + b("what") + " that " + b("does what") + ", used by " + b("how many") + " people";
-    case "analysis": return "analysed " + b("how much data") + " and found " + b("finding") + " that matters to " + b("who");
+    case "build":    return "built " + b("what") + " that " + b("does what") + ". " + b("how many") + " people used it, and " + b("what changed, with a number");
+    case "analysis": return "analysed " + b("how much data") + " and found " + b("finding") + ". If " + b("who") + " acts on it, my estimate is " + b("impact, with a number") + ", assuming " + b("key assumption") + " (my own estimate)";
     case "case":     return "recommended " + b("decision") + " for " + b("company in the case") + ". My estimate: " + b("result") + " within " + b("time") + ", assuming " + b("key assumption") + " (an estimate from a class case)";
     default:         return "scored " + b("grade") + ", top " + b("x") + "% of " + b("class size") + ", and can now " + b("skill");
   }
@@ -512,16 +562,27 @@ function clauseText(){
 
 function messages(){
   var year = ordinalYear();
+  var yr = year ? year + "-year " : "";
   var course = fb("course","course"), uni = fb("university","university");
   var unit = fb("unit","unit"), role = fb("role","role").toLowerCase();
   var comp = field("company");
-  var at = comp ? " at " + comp : "";
-  var interns = lane() === "research" ? "research interns" : "interns";
+  var lvl = levelText();
+  var target = comp ? " at " + comp : "";
   var clause = clauseText();
+  if (lane() === "research") return [
+    "Hi [Name], I'm a " + yr + course + " student at " + uni + ". For my " + unit + " unit, I " + clause + ". I'm looking for a " + lvl + " in this area. Are you taking students for next year? I can send the one-page version. Thank you, [Your name]",
+    "Hi [Name], I'm [Your name], a " + course + " student at " + uni + ". I recently " + clause + ". One-page summary: [link]. Could I ask what your lab looks for in a research assistant? Thank you for your time.",
+    "Hi [Name], I'm a " + course + " student at " + uni + ", thinking about a " + lvl + ". I recently " + clause + ". One page here: [link]. Would you be open to sharing how you chose your lab? A 15-minute call or a few lines here, whichever is easier. Thanks either way!"
+  ];
+  if (lane() === "start") return [
+    "Hi [Name], I'm a " + yr + course + " student at " + uni + ", looking for " + aAn(role) + " " + role + " " + lvl + target + ". For my " + unit + " unit, I " + clause + ". I wrote it up on one page. Would it be useful if I sent it over? Thank you, [Your name]",
+    "Hi [Name], I'm [Your name], a " + course + " student at " + uni + " aiming for " + aAn(role) + " " + role + " " + lvl + target + ". I recently " + clause + ". One-page summary: [link]. Could I ask what your startup looks for in " + aAn(role) + " " + role + " " + lvl + "? Thank you for your time.",
+    "Hi [Name], I'm a " + course + " student at " + uni + ", looking for " + aAn(role) + " " + role + " " + lvl + " at an early-stage startup. I " + clause + ". One page here: [link]. Do you know a founder in your programme who needs help with this kind of work? I can send a two-line intro you could forward."
+  ];
   return [
-    "Hi [Name], I'm a " + (year ? year + "-year " : "") + course + " student at " + uni + ". For my " + unit + " unit, I " + clause + ". I put it on one page here: [link]. I thought it might be useful for the " + role + " work your team does. If you have 2 minutes, what would make work like this more useful to your team? Thank you, [Your name]",
-    "Hi [Name], I'm [Your name], a " + course + " student at " + uni + " interested in " + role + " roles" + at + ". I recently " + clause + ", one-page summary here: [link]. Could I ask what your team looks for in " + interns + " for this role? Thank you for your time.",
-    "Hi [Name], I'm a " + course + " student at " + uni + " and saw you started as a " + role + " after graduating. I just finished a project where I " + clause + " ([link]). Would you be open to a 15-minute chat in the next few weeks about how you landed your first role? Thanks either way!"
+    "Hi [Name], I'm a " + yr + course + " student at " + uni + ", looking for " + aAn(role) + " " + role + " " + lvl + target + ". For my " + unit + " unit, I " + clause + ". I wrote it up on one page. Would it be useful if I sent it over? Thank you, [Your name]",
+    "Hi [Name], I'm [Your name], a " + course + " student at " + uni + " aiming for " + aAn(role) + " " + role + " " + lvl + target + ". I recently " + clause + ". One-page summary: [link]. Could I ask what your team looks for in " + aAn(role) + " " + role + " " + lvl + "? Thank you for your time.",
+    "Hi [Name], I'm a " + course + " student at " + uni + ". I saw you started as " + aAn(role) + " " + role + " after graduating, which is the path I'm working toward. To get ready, I " + clause + ". One page here: [link]. Would you be open to sharing how you landed your first role? A 15-minute call or a few lines here, whichever is easier. Thanks either way!"
   ];
 }
 
@@ -537,6 +598,11 @@ function contactGroups(){
     { title:"Professors", hint:"They pick research assistants and Master's students.", q:kw("professor", role) },
     { title:"PhD students", hint:"They were you, two or three years ago.", q:kw("PhD student", role) },
     { title:"Postdocs", hint:"They know what a research career really takes.", q:kw("postdoc", role) }
+  ];
+  if (lane() === "sme") return [
+    { title:"The owner or founder", hint:"In an SME they often hire directly, without a recruiter.", q:kw("owner", role, comp) },
+    { title:"Department or operations heads", hint:"They feel the problem your work solves.", q:kw("head of", role, comp) },
+    { title:"Recent joiners", hint:"They know what the owner looks for.", q:kw(role, comp || field("university")) }
   ];
   return [
     { title:"The hiring manager", hint:"The person who makes the final call.", q:kw("hiring manager", role, comp) },
@@ -587,6 +653,7 @@ function buildPrompt(){
     "",
     "Student: " + yearPhrase() + fb("course","course") + " at " + fb("university","university"),
     "Goal: " + goalLabel(),
+    "Level: " + levelText(),
     "Role they want: " + fb("role","role"),
     "Target company: " + (field("company") || "not given"),
     "Work: \u201C" + fb("title","title") + "\u201D for the " + fb("unit","unit") + " unit",
@@ -614,6 +681,7 @@ function markdown(){
     "",
     "- Student: " + yearPhrase() + fb("course","course") + " at " + fb("university","university"),
     "- Goal: " + goalLabel(),
+    "- Level: " + levelText(),
     "- Role: " + fb("role","role"),
     "- Target company: " + (field("company") || "not given"),
     "- Unit: " + fb("unit","unit"),
@@ -643,7 +711,8 @@ function markdown(){
     "",
     "Keep every proof card in one folder. That folder is what you read before interviews.",
     "",
-    "Made with Proof Bridge."
+    "Made with Proof Bridge, a free tool by Pascal Leong | Strategic Architect ([@pascalleonghx](https://linktr.ee/pascalleonghx)).",
+    "Find the 4 Hidden Assets in your degree: https://pascalleonghx.me/?utm_source=proof-bridge&utm_medium=proof-card"
   ]).join("\n");
 }
 
@@ -741,12 +810,14 @@ function renderLadder(){
   var sentence = T.segs.map(function(s){
     if (!s.b) return esc(s.t);
     var v = S.blanks[S.type][s.b] || "";
+    var ph = (BLANK_PH[S.type] && BLANK_PH[S.type][s.b]) || s.b;
     return '<span class="bl"><input type="text" data-type="' + S.type + '" data-blank="' + esc(s.b) +
-      '" value="' + esc(v) + '" placeholder="' + esc(s.b) + '" aria-label="' + esc(s.b) + '"></span>';
+      '" value="' + esc(v) + '" placeholder="' + esc(ph) + '" aria-label="' + esc(s.b) + '"></span>';
   }).join("");
   $("#resultBox").innerHTML =
     '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
-    (T.est ? '<p class="small est">This is an estimate from a class case. Say so out loud too.</p>' : "") +
+    '<p class="small">Strong proof has 3 parts: what you did, a number that measures it, and how you did it. This is the resume formula Laszlo Bock used as head of hiring at Google.</p>' +
+    (T.est ? '<p class="small est">This is an estimate. Say so out loud too.</p>' : "") +
     '<div class="sentence">' + sentence + "</div>" +
     '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>" +
     '<p class="small">Missing parts stay as [brackets]. Fill what you can now, the rest later. ' +
@@ -757,11 +828,11 @@ function renderLadder(){
 function renderStep5(){
   var st = statusInfo(), T = TYPES[S.type || "skill"];
   $("#st5Status").innerHTML =
-    '<div class="st-chip">' + esc(st.name) + "</div>" +
-    '<p class="move2"><span class="nextmove">Next move</span>' + esc(st.move) + "</p>";
+    '<div class="st-chip st-' + st.key + '">' + esc(st.name) + "</div>" +
+    '<p class="move2 st-' + st.key + '"><span class="nextmove">Next move</span>' + esc(st.move) + "</p>";
   $("#st5Result").innerHTML =
     '<div class="tag">Result \u00B7 ' + esc(T.name) + "</div>" +
-    (T.est ? '<p class="small est">Estimate from a class case.</p>' : "") +
+    (T.est ? '<p class="small est">Estimate.</p>' : "") +
     '<p class="big-sentence">' + hl(esc(typeText())) + "</p>" +
     '<p class="small">To make it stronger: ' + esc(T.tip) + "</p>";
 
@@ -787,6 +858,9 @@ function renderGoal(){
     return '<button type="button" class="chip' + (S.goal === g[0] ? " on" : "") + '" data-goal="' + g[0] + '">' + esc(g[1]) + "</button>";
   }).join("");
   $("#unsureNote").hidden = S.goal !== "unsure";
+  $("#levelChips").innerHTML = LEVELS.map(function(l){
+    return '<button type="button" class="chip' + (S.level === l[0] ? " on" : "") + '" data-level="' + l[0] + '">' + esc(l[1]) + "</button>";
+  }).join("");
 }
 
 function render(){
@@ -830,7 +904,7 @@ function syncInputs(){
 }
 
 function loadExample(ex){
-  S.goal = ex.goal; S.role = ex.role; S.company = ex.company;
+  S.goal = ex.goal; S.level = ex.level || "intern"; S.role = ex.role; S.company = ex.company;
   S.year = ex.year; S.course = ex.course; S.university = ex.university;
   S.title = ex.title; S.unit = ex.unit; S.notes = ex.notes; S.grade = ex.grade;
   S.open = ex.open; S.seen = ex.seen;
@@ -846,7 +920,7 @@ function loadExample(ex){
 
 function restart(){
   S = {
-    step:1, maxStep:1, goal:"", role:"", company:"",
+    step:1, maxStep:1, goal:"", level:"intern", role:"", company:"",
     year:"", course:"", university:"", title:"", unit:"", notes:"", grade:"",
     open:"", seen:"", ladderNo:0, type:"", blanks:blankState(), star:"mid"
   };
@@ -882,6 +956,11 @@ $("#stepper").addEventListener("click", function(e){
 $("#goalChips").addEventListener("click", function(e){
   var b = e.target.closest("[data-goal]");
   if (b) { S.goal = b.dataset.goal; render(); }
+});
+
+$("#levelChips").addEventListener("click", function(e){
+  var b = e.target.closest("[data-level]");
+  if (b) { S.level = b.dataset.level; render(); }
 });
 
 $("#checks").addEventListener("click", function(e){
@@ -986,6 +1065,41 @@ $("#dl").addEventListener("click", function(){
 });
 
 $("#restart").addEventListener("click", restart);
+
+$("#pdf").addEventListener("click", function(){
+  var w = window.open("", "_blank");
+  if (!w) { toast("Allow pop-ups to save as PDF"); return; }
+  var lines = markdown().split("\n");
+  var body = "";
+  var inList = false;
+  function closeList(){ if (inList) { body += "</ul>"; inList = false; } }
+  function inline(t){
+    return esc(t)
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1">$1</a>')
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  }
+  lines.forEach(function(line){
+    if (/^# /.test(line))       { closeList(); body += "<h1>" + inline(line.slice(2)) + "</h1>"; }
+    else if (/^## /.test(line)) { closeList(); body += "<h2>" + inline(line.slice(3)) + "</h2>"; }
+    else if (/^### /.test(line)) { closeList(); body += "<h3>" + inline(line.slice(4)) + "</h3>"; }
+    else if (/^- /.test(line))  { if (!inList) { body += "<ul>"; inList = true; } body += "<li>" + inline(line.slice(2)) + "</li>"; }
+    else if (line === "")       { closeList(); }
+    else                        { closeList(); body += "<p>" + inline(line) + "</p>"; }
+  });
+  closeList();
+  var linkStyle = "a{color:#064e3b}";
+  w.document.write(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Proof card</title><style>' +
+    "body{background:#fff;color:#111;font:15px/1.65 system-ui,-apple-system,sans-serif;max-width:720px;margin:32px auto;padding:0 20px}" +
+    "h1{font-size:24px;margin:0 0 16px}h2{font-size:18px;margin:28px 0 8px}h3{font-size:15px;margin:20px 0 6px}" +
+    "ul{padding-left:22px;margin:8px 0}li{margin:4px 0}p{margin:8px 0}" + linkStyle +
+    "</style></head><body>" + body + "</body></html>"
+  );
+  w.document.close();
+  w.focus();
+  w.print();
+});
 
 /* init */
 render();
